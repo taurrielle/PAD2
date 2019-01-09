@@ -3,8 +3,14 @@ class Api::ArtistsController < ApplicationController
 
   # GET /artists
   def index
-    @artists = Artist.all
+    all_artists = $redis.get("all_artists")
 
+    if all_artists.nil?
+      all_artists = Artist.all.to_json
+      $redis.set("all_artists", all_artists)
+      $redis.expire("all_artists", 1800) # Expire in 30 minutes
+    end
+    @artists = all_artists
     render json: @artists
   end
 

@@ -3,11 +3,18 @@ require 'error/error.rb'
 class Api::SongsController < Api::BaseController
   include ErrorHandling
   before_action :authenticate, only: [:add_to_favourites]
-  before_action :set_song, only: [:show, :update, :destroy]
+  before_action :set_song, only: [:show, :update, :destroy, :add_to_favourites]
 
   # GET /songs
   def index
-    @songs = Song.all
+    all_songs = $redis.get("all_songs")
+
+    if all_songs.nil?
+      all_songs = Song.all.to_json
+      $redis.set("all_songs", all_songs)
+      $redis.expire("all_songs", 1800) # Expire in 30 minutes
+    end
+    @songs = all_songs
 
     render json: @songs
   end
@@ -40,6 +47,15 @@ class Api::SongsController < Api::BaseController
   # DELETE /songs/1
   def destroy
     @song.destroy
+  end
+
+  def add_to_favourites
+    @current_user.favourites << @song.id
+    if @current_user.save
+      render json: {}, status: :created
+    else
+      render json: @current_user.errors, status: :unprocessable_entity
+    end
   end
 
   private
