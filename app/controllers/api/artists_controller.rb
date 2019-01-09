@@ -1,5 +1,8 @@
+require 'error/error.rb'
+
 class Api::ArtistsController < ApplicationController
   before_action :set_artist, only: [:show, :update, :destroy]
+  include ErrorHandling
 
   # GET /artists
   def index
@@ -10,32 +13,64 @@ class Api::ArtistsController < ApplicationController
       $redis.set("all_artists", all_artists)
       $redis.expire("all_artists", 1800) # Expire in 30 minutes
     end
-    @artists = all_artists
-    render json: @artists
+    @artists = JSON.load all_artists
+
+    respond_to do |format|
+      format.json { render json: @artists }
+      format.xml  { render xml: @artists.to_xml }
+    end
   end
 
   # GET /artists/1
   def show
-    render json: @artist
+    respond_to do |format|
+      format.json { render json: @artist }
+      format.xml  { render xml: @artist.as_json.to_xml }
+    end
   end
 
   # POST /artists
   def create
-    @artist = Artist.new(artist_params)
+    if request.content_type == "application/xml"
+      document = Nokogiri::XML(request.body.read)
+      schema = Nokogiri::XML::Schema(File.read('/home/ira/Desktop/sleepy_cat_api/schema.xsd'))
+      validation = schema.validate(document)
+
+      if validation.empty?
+        xml_params = Hash.from_xml(document.to_s)
+        @artist = Artist.new(xml_params["artist"].symbolize_keys)
+      else
+        raise Error::Internal::InvalidXML
+      end
+    else
+      @artist = Artist.new(artist_params)
+    end
 
     if @artist.save
-      render json: @artist, status: :created, location: @artist
+      respond_to do |format|
+        format.json { render json: @artist, status: :created }
+        format.xml  { render xml: @artist.as_json.to_xml, status: :created }
+      end
     else
-      render json: @artist.errors, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: @artist.errors, status: :unprocessable_entity }
+        format.xml  { render xml: @artist.errors.as_json.to_xml, status: :unprocessable_entity }
+      end
     end
   end
 
   # PATCH/PUT /artists/1
   def update
     if @artist.update(artist_params)
-      render json: @artist
+      respond_to do |format|
+        format.json { render json: @artist, status: :ok }
+        format.xml  { render xml: @artist.as_json.to_xml, status: :ok }
+      end
     else
-      render json: @artist.errors, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: @artist.errors, status: :unprocessable_entity }
+        format.xml  { render xml: @artist.errors.as_json.to_xml, status: :unprocessable_entity }
+      end
     end
   end
 

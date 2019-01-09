@@ -27,6 +27,7 @@ gem 'redis'
 gem 'redis-namespace'
 gem 'redis-rails'
 gem 'redis-rack-cache'
+gem 'nokogiri'
 
 # Use Capistrano for deployment
 # gem 'capistrano-rails', group: :development

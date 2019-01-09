@@ -80,7 +80,11 @@ class Api::UsersController < Api::BaseController
     $redis.set("songs", json_hash)
     $redis.expire("songs", 1800) # Expire in 30 minutes
 
-    render json: { songs: hash.values }
+    respond_to do |format|
+      format.json { render json: { songs: hash.values }, status: :ok }
+      format.xml  { render xml: { songs: hash.values }.as_json.to_xml, status: :ok }
+    end
+
   end
 
   private

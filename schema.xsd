@@ -1,0 +1,17 @@
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+
+<xs:element name="artist">
+ <xs:complexType>
+ <xs:sequence>
+ <xs:element ref="name" minOccurs='1' maxOccurs='1'/>
+ <xs:element ref="origin" minOccurs='1' maxOccurs='1'/>
+ <xs:element ref="years_active" minOccurs='1' maxOccurs='1'/>
+ </xs:sequence>
+ </xs:complexType>
+ </xs:element>
+
+
+ <xs:element name="name" type='xs:string'/>
+ <xs:element name="origin" type='xs:string'/>
+ <xs:element name="years_active" type='xs:string'/>
+</xs:schema>

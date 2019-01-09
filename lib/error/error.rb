@@ -27,5 +27,9 @@ module Error
     class InvalidAuthenticationToken < CustomError
       def status; :unauthorized end
     end
+
+    class InvalidXML < CustomError
+      def status; :unauthorized end
+    end
   end
 end

@@ -14,14 +14,20 @@ class Api::SongsController < Api::BaseController
       $redis.set("all_songs", all_songs)
       $redis.expire("all_songs", 1800) # Expire in 30 minutes
     end
-    @songs = all_songs
+    @songs = JSON.load all_songs
 
-    render json: @songs
+    respond_to do |format|
+      format.json { render json: @songs }
+      format.xml  { render xml: @songs.to_xml }
+    end
   end
 
   # GET /songs/1
   def show
-    render json: @song
+    respond_to do |format|
+      format.json { render json: @song }
+      format.xml  { render xml: @song.as_json.to_xml }
+    end
   end
 
   # POST /songs
@@ -29,18 +35,30 @@ class Api::SongsController < Api::BaseController
     @song = Song.new(song_params)
 
     if @song.save
-      render json: @song, status: :created, location: @song
+      respond_to do |format|
+        format.json { render json: @song, status: :created }
+        format.xml  { render xml: @song.as_json.to_xml, status: :created }
+      end
     else
-      render json: @song.errors, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: @song.errors, status: :unprocessable_entity }
+        format.xml  { render xml: @song.errors.as_json.to_xml, status: :unprocessable_entity }
+      end
     end
   end
 
   # PATCH/PUT /songs/1
   def update
     if @song.update(song_params)
-      render json: @song
+      respond_to do |format|
+        format.json { render json: @song, status: :ok }
+        format.xml  { render xml: @song.as_json.to_xml, status: :ok }
+      end
     else
-      render json: @song.errors, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: @song.errors, status: :unprocessable_entity }
+        format.xml  { render xml: @song.errors.as_json.to_xml, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -52,9 +70,15 @@ class Api::SongsController < Api::BaseController
   def add_to_favourites
     @current_user.favourites << @song.id
     if @current_user.save
-      render json: {}, status: :created
+      respond_to do |format|
+        format.json { render json: {}, status: :ok }
+        format.xml  { head :ok }
+      end
     else
-      render json: @current_user.errors, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: @current_user.errors, status: :unprocessable_entity }
+        format.xml  { render xml: @current_user.errors.as_json.to_xml, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -66,6 +90,6 @@ class Api::SongsController < Api::BaseController
 
     # Only allow a trusted parameter "white list" through.
     def song_params
-      params.require(:song).permit(:title, :atrist_id, :genre)
+      params.require(:song).permit(:title, :artist_id, :genre)
     end
 end

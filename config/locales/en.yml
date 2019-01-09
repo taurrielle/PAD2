@@ -35,3 +35,4 @@ en:
       UserExists:                 "An user with this email already exists"
       PasswordTooShort:           "Password should be longer than 6 characters"
       InvalidAuthenticationToken: "You have provided an invalid authentication token"
+      InvalidXML:                 "You have provided an invalid XML"
